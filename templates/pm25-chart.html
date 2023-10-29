@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM 2.5 數據圖</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+</head>
+
+<body>
+    <h1>PM 2.5 數據圖</h1>
+    <div id="main" style="width: 1024px;height:400px;"></div>
+
+    <!-- 使用ajax取得資料後繪製 -->
+    <script>
+        let myChart = echarts.init(document.getElementById('main'));
+        drawPM25();
+        function echartPic1(result) {
+            let option = {
+                title: {
+                    text: result['title']
+                },
+                tooltip: {},
+                legend: {
+                    data: ['PM 2.5']
+                },
+                xAxis: {
+                    data: result['xData']
+                },
+                yAxis: {},
+                series: [
+                    {
+                        name: 'PM 2.5',
+                        type: 'bar',
+                        data: result['yData']
+                    }
+                ]
+            };
+            myChart.setOption(option);
+        }
+        function echartPic2(result) {
+            let dataAxis = result['xData'];
+            // prettier-ignore
+            let data = result['yData'];
+            let yMax = 500;
+            let dataShadow = [];
+            for (let i = 0; i < data.length; i++) {
+                dataShadow.push(yMax);
+            }
+            option = {
+                title: {
+                    text: result['title']
+                },
+                xAxis: {
+                    data: dataAxis,
+                    axisLabel: {
+                        inside: true,
+                        color: '#fff'
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    axisLine: {
+                        show: false
+                    },
+                    z: 10
+                },
+                yAxis: {
+                    axisLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    },
+                    axisLabel: {
+                        color: '#999'
+                    }
+                },
+                dataZoom: [
+                    {
+                        type: 'inside'
+                    }
+                ],
+                series: [
+                    {
+                        type: 'bar',
+                        showBackground: true,
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#83bff6' },
+                                { offset: 0.5, color: '#188df0' },
+                                { offset: 1, color: '#188df0' }
+                            ])
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: '#2378f7' },
+                                    { offset: 0.7, color: '#2378f7' },
+                                    { offset: 1, color: '#83bff6' }
+                                ])
+                            }
+                        },
+                        data: data
+                    }
+                ]
+            };
+            // Enable data zoom when user click bar.
+            const zoomSize = 6;
+            myChart.on('click', function (params) {
+                console.log(dataAxis[Math.max(params.dataIndex - zoomSize / 2, 0)]);
+                myChart.dispatchAction({
+                    type: 'dataZoom',
+                    startValue: dataAxis[Math.max(params.dataIndex - zoomSize / 2, 0)],
+                    endValue:
+                        dataAxis[Math.min(params.dataIndex + zoomSize / 2, data.length - 1)]
+                });
+            });
+
+            option && myChart.setOption(option);
+        };
+        function drawPM25() {
+            $.ajax(
+                {
+                    url: '/pm25-json', //呼叫main.py寫的route路徑
+                    type: 'GET',
+                    dataType: 'json',
+                    success: (result) => { //此為main.py return的值
+                        echartPic2(result);
+                    },
+                    error: () => {
+                        alert('取得資料失敗!')
+                    }
+                }
+            )
+        };
+    </script>
+</body>
+
+</html>
