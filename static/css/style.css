@@ -3,6 +3,36 @@ body {
     text-align: center;
 }
 
+.highest, .lowest {
+    color: white;
+    border-radius: 6px;
+    padding: 2px 6px;
+    width: 20px;
+    display: inline-block;
+}
+
+.highest {
+    background-color: brown;
+}
+.lowest {
+    background-color: green;
+}
+
+.flex {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.button {
+    background-color: cadetblue;
+    color: white;
+    border: 0;
+    border-radius: 6px;
+    padding: 6px;
+}
+
 .update {
     background-color: chocolate;
     color: white;

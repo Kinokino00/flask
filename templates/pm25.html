@@ -11,6 +11,23 @@
 <body>
   <h1>PM 2.5 即時更新資料</h1>
   <p class="update">更新時間:{{now}} <span>({{message}})</span></p>
+
+  <div class="flex">
+    <div class="">
+      最高: {{highest[0]}} <span class="highest">{{highest[1]}}</span>
+    </div>
+    <div class="">
+      最低: {{lowest[0]}} <span class="lowest">{{lowest[1]}}</span>
+    </div>
+  </div>
+
+  <form action="/pm25" method="POST">
+    <!-- action因為是同一頁，寫不寫都行 -->
+    <div class="flex">
+      <input type="submit" class="button" value="更新" name="update">
+      <input type="submit" class="button" value="排序" name="sort">
+    </div>
+  </form>
   <table border="1">
     <thead>
       <tr>
@@ -29,6 +46,11 @@
       {% endfor %}
     </tbody>
   </table>
+  <script>
+    setTimeout(() => {
+      location.reload();
+    }, 3600000)
+  </script>
 </body>
 
 </html>
