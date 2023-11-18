@@ -12,115 +12,39 @@
 <body>
     <h1>PM 2.5 數據圖</h1>
     <div id="main" style="width: 1024px;height:400px;"></div>
+    <div id="six-county" style="width: 1024px;height:400px;"></div>
 
     <!-- 使用ajax取得資料後繪製 -->
     <script>
-        let myChart = echarts.init(document.getElementById('main'));
+        let chart1 = echarts.init(document.getElementById('main'));
+        let chart2 = echarts.init(document.getElementById('six-county'));
         drawPM25();
-        function echartPic1(result) {
+        function chartPic(chart, title, label, xData, yData, color = "#00008b") {
             let option = {
                 title: {
-                    text: result['title']
+                    text: title
                 },
                 tooltip: {},
                 legend: {
-                    data: ['PM 2.5']
+                    data: label
                 },
                 xAxis: {
-                    data: result['xData']
+                    data: xData
                 },
                 yAxis: {},
                 series: [
                     {
-                        name: 'PM 2.5',
-                        type: 'bar',
-                        data: result['yData']
-                    }
-                ]
-            };
-            myChart.setOption(option);
-        }
-        function echartPic2(result) {
-            let dataAxis = result['xData'];
-            // prettier-ignore
-            let data = result['yData'];
-            let yMax = 500;
-            let dataShadow = [];
-            for (let i = 0; i < data.length; i++) {
-                dataShadow.push(yMax);
-            }
-            option = {
-                title: {
-                    text: result['title']
-                },
-                xAxis: {
-                    data: dataAxis,
-                    axisLabel: {
-                        inside: true,
-                        color: '#fff'
-                    },
-                    axisTick: {
-                        show: false
-                    },
-                    axisLine: {
-                        show: false
-                    },
-                    z: 10
-                },
-                yAxis: {
-                    axisLine: {
-                        show: false
-                    },
-                    axisTick: {
-                        show: false
-                    },
-                    axisLabel: {
-                        color: '#999'
-                    }
-                },
-                dataZoom: [
-                    {
-                        type: 'inside'
-                    }
-                ],
-                series: [
-                    {
-                        type: 'bar',
-                        showBackground: true,
                         itemStyle: {
-                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                { offset: 0, color: '#83bff6' },
-                                { offset: 0.5, color: '#188df0' },
-                                { offset: 1, color: '#188df0' }
-                            ])
+                            color: color
                         },
-                        emphasis: {
-                            itemStyle: {
-                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                                    { offset: 0, color: '#2378f7' },
-                                    { offset: 0.7, color: '#2378f7' },
-                                    { offset: 1, color: '#83bff6' }
-                                ])
-                            }
-                        },
-                        data: data
+                        name: label,
+                        type: 'bar',
+                        data: yData
                     }
                 ]
             };
-            // Enable data zoom when user click bar.
-            const zoomSize = 6;
-            myChart.on('click', function (params) {
-                console.log(dataAxis[Math.max(params.dataIndex - zoomSize / 2, 0)]);
-                myChart.dispatchAction({
-                    type: 'dataZoom',
-                    startValue: dataAxis[Math.max(params.dataIndex - zoomSize / 2, 0)],
-                    endValue:
-                        dataAxis[Math.min(params.dataIndex + zoomSize / 2, data.length - 1)]
-                });
-            });
-
-            option && myChart.setOption(option);
-        };
+            chart.setOption(option);
+        }
         function drawPM25() {
             $.ajax(
                 {
@@ -128,7 +52,9 @@
                     type: 'GET',
                     dataType: 'json',
                     success: (result) => { //此為main.py return的值
-                        echartPic2(result);
+                        console.log(result);
+                        chartPic(chart1, result['title'], "PM2.5", result['xData'], result['yData'], color = "#ff99b4");
+                        chartPic(chart2, "六都PM2.5平均值", "PM2.5", Object.keys(result['six_data']), Object.values(result['six_data']), color = "#ff69b4");
                     },
                     error: () => {
                         alert('取得資料失敗!')

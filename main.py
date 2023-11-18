@@ -20,10 +20,19 @@ def index():
 def get_pm25_json():
     url = "https://data.moenv.gov.tw/api/v2/aqx_p_02?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=datacreationdate%20desc&format=CSV"
     df = pd.read_csv(url).dropna()
+
+    six_county = ["新北市", "臺北市", "桃園市", "臺中市", "臺南市", "高雄市"]
+    six_data = {}
+    for county in six_county:
+        six_data[county] = round(
+            df.groupby("county").get_group(county)["pm25"].mean(), 2
+        )
+
     json_data = {
         "title": "PM2.5數據",
         "xData": df["site"].tolist(),
         "yData": df["pm25"].tolist(),
+        "six_data": six_data,
     }
     return json.dumps(json_data, ensure_ascii=False)  # 轉成json
 
