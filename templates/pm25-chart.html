@@ -11,58 +11,26 @@
 
 <body>
     <h1>PM 2.5 數據圖</h1>
+    <div class="flex">
+        <div class="">
+            最高: {{highest[0]}} <span class="highest">{{highest[1]}}</span>
+        </div>
+        <div class="">
+            最低: {{lowest[0]}} <span class="lowest">{{lowest[1]}}</span>
+        </div>
+    </div>
+    <br>
     <div id="main" style="width: 1024px;height:400px;"></div>
     <div id="six-county" style="width: 1024px;height:400px;"></div>
+    <select name="selectCounty" id="selectCounty">
+        {% for county in counties %}
+        <option value="{{ county }}">{{ county }}</option>
+        {% endfor %}
+    </select>
+    <div id="county" style="width: 1024px;height:400px;"></div>
+    <div id="county2" style="width: 1024px;height:400px;"></div>
 
-    <!-- 使用ajax取得資料後繪製 -->
-    <script>
-        let chart1 = echarts.init(document.getElementById('main'));
-        let chart2 = echarts.init(document.getElementById('six-county'));
-        drawPM25();
-        function chartPic(chart, title, label, xData, yData, color = "#00008b") {
-            let option = {
-                title: {
-                    text: title
-                },
-                tooltip: {},
-                legend: {
-                    data: label
-                },
-                xAxis: {
-                    data: xData
-                },
-                yAxis: {},
-                series: [
-                    {
-                        itemStyle: {
-                            color: color
-                        },
-                        name: label,
-                        type: 'bar',
-                        data: yData
-                    }
-                ]
-            };
-            chart.setOption(option);
-        }
-        function drawPM25() {
-            $.ajax(
-                {
-                    url: '/pm25-json', //呼叫main.py寫的route路徑
-                    type: 'GET',
-                    dataType: 'json',
-                    success: (result) => { //此為main.py return的值
-                        console.log(result);
-                        chartPic(chart1, result['title'], "PM2.5", result['xData'], result['yData'], color = "#ff99b4");
-                        chartPic(chart2, "六都PM2.5平均值", "PM2.5", Object.keys(result['six_data']), Object.values(result['six_data']), color = "#ff69b4");
-                    },
-                    error: () => {
-                        alert('取得資料失敗!')
-                    }
-                }
-            )
-        };
-    </script>
+    <script src="../static/js/pm25-chart.js"></script>
 </body>
 
 </html>

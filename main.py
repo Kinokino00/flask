@@ -5,19 +5,39 @@ import json
 
 app = Flask(__name__)
 books = {1: "Python book", 2: "Java book", 3: "Flask book"}
+url = "https://data.moenv.gov.tw/api/v2/aqx_p_02?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=datacreationdate%20desc&format=CSV"
+counties = None
 ascending = True
+df = None
 
 
 @app.route("/")  # app可隨意取名，/代表首頁
 # @app.route("/index")  # /index代表index頁
 def index():
-    today = datetime.now()
+    today = get_now()
     print(today)  # print只能在終端機看到
     return render_template("index.html", today=today)
 
 
+def get_now():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+@app.route("/pm25-chart")
+def pm25_chart():
+    global counties
+    df = pd.read_csv(url).dropna()
+    counties = list(set(df["county"]))
+    lowest = df.sort_values("pm25").iloc[0][["site", "pm25"]].values
+    highest = df.sort_values("pm25").iloc[-1][["site", "pm25"]].values
+    return render_template(
+        "/pm25-chart.html", counties=counties, lowest=lowest, highest=highest
+    )
+
+
 @app.route("/pm25-json")  # 當API用，pm25-chart.html會呼叫他
 def get_pm25_json():
+    global df, counties  # 表示這邊的df是可拉到全域給大家用
     url = "https://data.moenv.gov.tw/api/v2/aqx_p_02?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=datacreationdate%20desc&format=CSV"
     df = pd.read_csv(url).dropna()
 
@@ -33,20 +53,45 @@ def get_pm25_json():
         "xData": df["site"].tolist(),
         "yData": df["pm25"].tolist(),
         "six_data": six_data,
+        "county": counties[0],  # 預設選到的縣市是第一個縣市
     }
     return json.dumps(json_data, ensure_ascii=False)  # 轉成json
 
 
-@app.route("/pm25-chart")
-def pm25_chart():
-    return render_template("/pm25-chart.html")
+@app.route("/county-pm25-json/<county>")
+def get_county_pm25_json(county):
+    global df  # 呼叫全域
+    url = "https://data.moenv.gov.tw/api/v2/aqx_p_02?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=datacreationdate%20desc&format=CSV"
+    pm25 = {}
+    try:
+        if df is None:
+            df = pd.read_csv(url).dropna()
+        pm25 = (
+            df.groupby("county")
+            .get_group(county)[["site", "pm25"]]
+            .set_index("site")
+            .to_dict()["pm25"]
+        )
+        success = True
+        message = "資料取得成功!"
+    except Exception as e:
+        print(e)
+        success = False
+        message = str(e)
+    json_data = {
+        "datetime": get_now(),
+        "success": success,
+        "title": county,
+        "pm25": pm25,
+        "message": message,
+    }
+    return json.dumps(json_data, ensure_ascii=False)
 
 
 @app.route("/pm25", methods=["GET", "POST"])
 def get_pm25():
     global ascending
-    url = "https://data.moenv.gov.tw/api/v2/aqx_p_02?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=datacreationdate%20desc&format=CSV"
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = get_now()
     sort = False
     # 確定回傳方式
     if request.method == "POST":
@@ -77,7 +122,6 @@ def get_pm25():
 
 @app.route("/books")
 def get_all_books():
-    today = datetime.now()
     books = {
         1: {
             "name": "Python book",
@@ -95,7 +139,7 @@ def get_all_books():
             "image_url": "https://im1.book.com.tw/image/getImage?i=https://www.books.com.tw/img/001/036/04/0010360466.jpg&v=62d695bak&w=348&h=348",
         },
     }
-    return render_template("books.html", books=books, today=today)
+    return render_template("books.html", books=books, today=get_now())
 
 
 # id為變數，URL上的都是字串用int轉型成數字
