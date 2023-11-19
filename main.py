@@ -28,6 +28,8 @@ def pm25_chart():
     global counties
     df = pd.read_csv(url).dropna()
     counties = list(set(df["county"]))
+    # counties = [counties for county in counties if county != six_county[0]]  #把不是新北市的先留下
+    # counties.insert(0, six_county[0])  #再塞入新北市到第一位
     lowest = df.sort_values("pm25").iloc[0][["site", "pm25"]].values
     highest = df.sort_values("pm25").iloc[-1][["site", "pm25"]].values
     return render_template(
